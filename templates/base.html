@@ -34,7 +34,10 @@
           </button>
           <a class="navbar-brand"
              href="/">
-            Multi User Blog
+            multiblog:
+            <small>
+              a multi user blog
+            </small>
           </a>
         </div>
         <div class="collapse
@@ -43,17 +46,27 @@
           <ul class="nav
                      navbar-nav
                      navbar-right">
-            <!--  TODO Add a condition to which link will show -->
-            <li>
-              <a href="/login">
-                Sign In
-              </a>
-            </li>
-            <li>
-              <a href="/signup">
-                Sign Up
-              </a>
-            </li>
+            {% if user %}
+              <li>
+                <a href="#">{{user.user}}</a>
+              </li>
+              <li>
+                <a href="/logout">
+                  Sign Out
+                </a>
+              </li>
+            {% else %}
+              <li>
+                <a href="/login">
+                  Sign In
+                </a>
+              </li>
+              <li>
+                <a href="/signup">
+                  Sign Up
+                </a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </div>

@@ -55,13 +55,15 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-class UserHandler(Handler):
+class SignUpHandler(Handler):
     def render_signup_form(self, values={}, errors={}):
-        user = self
         self.render('signup.html', values=values, errors=errors)
 
     def get(self):
-        self.render_signup_form()
+        if not self.user:
+            self.render_signup_form()
+        else:
+            self.redirect('/')
 
     def post(self):
         values = {
@@ -73,17 +75,42 @@ class UserHandler(Handler):
 
         new_user = BlogUser(values)
         if new_user.save():
-            self.write('User has been saved!')
             self.login(new_user.id)
             self.redirect('/')
         else:
             self.render_signup_form(values=values, errors=new_user.errors)
+
+class LogInHandler(Handler):
+    def get(self):
+        if not self.user:
+            self.render('login.html')
+        else:
+            self.redirect('/')
+    def post(self):
+        username = self.request.get('user')
+        password = self.request.get('pswd')
+        if not (username and password):
+            self.render('login.html', error='Enter both username and password!')
+        else:
+            user = User.find_by_username(username)
+            if user and Cryptographer().valid_pw(username, password, user.pswd):
+                self.login(user.key().id())
+                self.redirect('/')
+            else:
+                self.render('login.html', error='Wrong username and/or  password!')
+
+class LogOutHandler(Handler):
+    def get(self):
+        self.logout()
+        self.redirect('/')
 
 class HomeHandler(Handler):
     def get(self):
         self.render('front.html')
 
 app = webapp2.WSGIApplication([
-    ('/signup', UserHandler),
-    ('/', HomeHandler)
+    ('/', HomeHandler),
+    ('/signup', SignUpHandler),
+    ('/login', LogInHandler),
+    ('/logout', LogOutHandler)
 ], debug=True)

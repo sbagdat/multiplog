@@ -1,4 +1,5 @@
-.signup-form {
+.signup-form,
+.login-form {
   padding: 10px;
 }
 .help-block {

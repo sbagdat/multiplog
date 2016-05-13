@@ -18,6 +18,10 @@ class User(db.Model):
     def find_by_id(cls, id):
         return User.get_by_id(id, parent = users_key())
 
+    @classmethod
+    def find_by_username(cls, username):
+        return User.all().filter('user =', username).get()
+
 class Cryptographer():
     def __init__(self):
         self.secret = self.read_secret_file()
@@ -46,6 +50,10 @@ class Cryptographer():
     def make_pw_hash(self, name, pw):
         h = hashlib.sha256(name + pw + self.salt).hexdigest()
         return '%s,%s' % (self.salt, h)
+
+    def valid_pw(self, name, password, h):
+        self.salt = h.split(',')[0]
+        return h == self.make_pw_hash(name, password)
 
 class BlogUser():
     def __init__(self, values):
