@@ -14,6 +14,10 @@ class User(db.Model):
     pswd = db.StringProperty(required=True)
     email = db.StringProperty()
 
+    @classmethod
+    def find_by_id(cls, id):
+        return User.get_by_id(id, parent = users_key())
+
 class Cryptographer():
     def __init__(self):
         self.secret = self.read_secret_file()
@@ -44,32 +48,30 @@ class Cryptographer():
         return '%s,%s' % (self.salt, h)
 
 class BlogUser():
-    def __init__(self, username, password, password_confirmation, email=''):
-        self.initialize_variables(username, password, password_confirmation, email)
+    def __init__(self, values):
+        self.initialize_variables(values)
         self.cryptographer = Cryptographer()
         self.check_for_errors()
 
-    def initialize_variables(self, username, password, password_confirmation, email):
+    def initialize_variables(self, values):
         self.id = None
-        self.username = username
-        self.password = password
-        self.password_confirmation = password_confirmation
-        self.email = email
-        self.errors = []
+        self.username = values['username']
+        self.password = values['password']
+        self.password_confirmation = values['password_confirmation']
+        self.email = values['email']
+        self.errors = {}
 
     def check_for_errors(self):
         # clean old errors
-        self.errors = []
-        # if any errors found, add the to the end of errors list
+        self.errors = {}
         if not self.valid_username():
-            self.errors.append("That's not a valid username.")
+            self.errors['username'] = 'not valid username'
         if not self.valid_password():
-            self.errors.append("That's not a valid password.")
+            self.errors['password'] = 'not valid password.'
         elif not self.match_passwords():
-            self.errors.append("Your passwords didn't match.")
+            self.errors['password_confirmation'] = "passwords didn't match"
         if not self.valid_email():
-            if self.email != '':
-                self.errors.append("That's not a valid email.")
+            self.errors['email'] = 'not valid email.'
         return self.errors
 
     def have_errors(self):
@@ -85,7 +87,7 @@ class BlogUser():
         return self.password == self.password_confirmation
 
     def valid_email(self):
-        return self.email and self.regexp('password').match(self.email)
+        return not self.email or self.regexp('email').match(self.email)
 
     def save(self):
         if self.errors:
@@ -112,7 +114,7 @@ class BlogUser():
     def user_exist(self):
         user = User.all().filter('user =', self.username).get()
         if user:
-            errors = ['User already exist!']
+            self.errors['exist'] = 'User already exist, try different username'
             return True
         else:
             return False
