@@ -1,0 +1,4 @@
+# For real apps when want to share publicly, include secret.txt here
+# secret.txt
+.DS_Store
+*.pyc
