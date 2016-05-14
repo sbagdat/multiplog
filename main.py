@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+# import os
 import webapp2
 import jinja2
 
@@ -112,7 +112,8 @@ class LogOutHandler(Handler):
 
 class HomeHandler(Handler):
     def get(self):
-        self.render('front.html')
+        posts = Post.all().order('-created_at')
+        self.render('front.html', posts = posts)
 
 class NewPostHandler(Handler):
     def get(self):
