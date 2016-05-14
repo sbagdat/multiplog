@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-# import os
 import webapp2
 import jinja2
-
 from google.appengine.ext import db
-
 from custom import *
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -46,7 +43,6 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
     def set_secure_cookie(self, name, val):
-        # TODO: Think about implementing make_secure_val as a class method
         cookie_val = Cryptographer().make_secure_val(val)
         self.response.headers.add_header(
             'Set-Cookie',
