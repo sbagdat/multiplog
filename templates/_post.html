@@ -1,0 +1,18 @@
+<div class="page-header">
+  <h1>
+    {{post.subject}}
+  </h1>
+</div>
+<div class="row">
+    <small class="col-xs-12">
+      <strong>
+        {{post.created_at.strftime("%b %d, %Y")}}
+      </strong>
+    </small>
+</div>
+<br>
+<div class="row">
+  <p class="col-xs-12">
+    {{post._render_text | safe}}
+  </p>
+</div>

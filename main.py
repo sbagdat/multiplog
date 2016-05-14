@@ -17,10 +17,17 @@ def render_str(template, **params):
     t = JINJA_ENVIRONMENT.get_template(template)
     return t.render(params)
 
+def blog_key(name = 'default'):
+    return db.Key.from_path('blogs', name)
+
 class Post(db.Model):
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created_at = db.DateTimeProperty(auto_now_add=True)
+
+    def render(self):
+      self._render_text = self.content.replace('\n', '<br>')
+      return render_str("_post.html", post = self)
 
 class Handler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
@@ -70,8 +77,7 @@ class SignUpHandler(Handler):
           'username': (self.request.get('user') or ''),
           'password': (self.request.get('pswd') or ''),
           'password_confirmation': (self.request.get('pswd_verify') or ''),
-          'email': (self.request.get('email') or '')
-        }
+          'email': (self.request.get('email') or '')}
 
         new_user = BlogUser(values)
         if new_user.save():
@@ -108,9 +114,46 @@ class HomeHandler(Handler):
     def get(self):
         self.render('front.html')
 
+class NewPostHandler(Handler):
+    def get(self):
+        if self.user:
+            self.render("newpost.html", values="")
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        if not self.user:
+            self.redirect('/')
+
+        values = {
+            'subject': self.request.get('subject'),
+            'content': self.request.get('content')}
+
+        if values['subject'] and values['content']:
+            post = Post(parent = blog_key(), subject= values['subject'], content = values['content'])
+            post.put()
+            self.redirect('/posts/%s' % str(post.key().id()))
+        else:
+            error = "we need subject and content!"
+            self.render("newpost.html", values=values, error=error)
+
+class PostHandler(Handler):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+
+        if not post:
+            self.error(404)
+            return
+
+        self.render("post.html", post = post)
+
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
     ('/login', LogInHandler),
-    ('/logout', LogOutHandler)
+    ('/logout', LogOutHandler),
+    ('/newpost', NewPostHandler),
+    ('/posts/([0-9]+)', PostHandler)
 ], debug=True)

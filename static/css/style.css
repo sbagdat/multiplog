@@ -8,3 +8,6 @@
 .error-message {
   margin-top: 0;
 }
+.btn-flat {
+  border-radius: 0;
+}
