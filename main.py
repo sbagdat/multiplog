@@ -3,7 +3,7 @@ from google.appengine.ext import db
 from custom import *
 from helpers import render_str, blog_key
 from post import Post
-
+from user import User, BlogUser
 
 
 
