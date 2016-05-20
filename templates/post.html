@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 
 {% block content %}
-  {{post.render(user=user) | safe}}
+  {{post.render(user=user, commented=True) | safe}}
 {% endblock %}

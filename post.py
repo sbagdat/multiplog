@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from user import User
+from comment import Comment
 from helpers import render_str
 
 
@@ -14,7 +15,7 @@ class Post(db.Model):
         post_subject = post_subject.replace('-', ' ')
         return Post.all().filter('subject =', post_subject).get()
 
-    def render(self, user=None, truncated=False):
+    def render(self, user=None, truncated=False, commented=False):
         self._render_text = self.content.replace('\n', '<br>')
         if len(self._render_text) < 135:
             self._truncated_render_text = self._render_text
@@ -26,10 +27,14 @@ class Post(db.Model):
             "_post.html",
             post=self,
             user=user,
-            truncated=truncated)
+            truncated=truncated,
+            commented=commented)
 
     def username(self):
         return User.find_by_id(self.user_id).user
+
+    def comments(self):
+        return Comment.all().filter('post_id=', self.key().id())
 
     def linkified_subject(self):
         return self.subject.replace(' ', '-')

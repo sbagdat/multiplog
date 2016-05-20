@@ -30,3 +30,14 @@
     {% endif %}
   </p>
 </div>
+
+{% if commented %}
+<div class="row comments">
+  <div class="col-xs-12">
+    <h3>Comments</h3>
+    {% for comment in post.comments() %}
+      {{comment.content}}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
