@@ -122,7 +122,8 @@ class NewPostHandler(Handler):
             post = Post(
                 parent=blog_key(),
                 subject=values['subject'],
-                content=values['content'])
+                content=values['content'],
+                user_id=self.user.key().id())
             post.put()
             self.redirect('/posts/%s' % str(post.key().id()))
         else:
