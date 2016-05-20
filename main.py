@@ -1,11 +1,8 @@
 import webapp2
-import jinja2
 from google.appengine.ext import db
 from custom import *
-from helpers import render_str
+from helpers import render_str, blog_key
 
-def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
 
 class Post(db.Model):
     subject = db.StringProperty(required=True)

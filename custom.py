@@ -5,9 +5,7 @@ import hashlib
 import hmac
 from string import letters
 from google.appengine.ext import db
-
-def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
+from helpers import users_key
 
 class User(db.Model):
     user = db.StringProperty(required=True)
