@@ -3,8 +3,6 @@ import random
 import hashlib
 import hmac
 from string import letters
-from google.appengine.ext import db
-
 
 
 class Cryptographer():
@@ -39,4 +37,3 @@ class Cryptographer():
     def valid_pw(self, name, password, h):
         self.salt = h.split(',')[0]
         return h == self.make_pw_hash(name, password)
-

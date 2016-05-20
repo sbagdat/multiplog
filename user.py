@@ -1,6 +1,6 @@
 import re
 from google.appengine.ext import db
-from custom import Cryptographer
+from crypto import Cryptographer
 from helpers import users_key
 
 
