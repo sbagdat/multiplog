@@ -122,18 +122,18 @@ class NewPostHandler(Handler):
             post = Post(
                 parent=blog_key(),
                 subject=values['subject'],
-                content=values['content'])
+                content=values['content'],
+                user_id=self.user.key().id())
             post.put()
-            self.redirect('/posts/%s' % str(post.key().id()))
+            self.redirect('/posts/%s' % post.linkified_subject())
         else:
             error = "we need subject and content!"
             self.render("newpost.html", values=values, error=error)
 
 
-class PostHandler(Handler):
-    def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+class ShowPostHandler(Handler):
+    def get(self, post_subject):
+        post = Post.find_by_subject(post_subject)
 
         if not post:
             self.error(404)
@@ -142,11 +142,70 @@ class PostHandler(Handler):
         self.render("post.html", post=post)
 
 
+class EditPostHandler(Handler):
+    def get(self, post_subject):
+        if not self.user:
+            self.redirect("/login")
+
+        post = Post.find_by_subject(post_subject)
+        # If user is not owner of the post, redirect with an error
+        # TODO: Show an error
+        if not self.user.owner_of(post):
+            self.redirect("/")
+        else:
+            values = {
+                'subject': post.subject,
+                'content': post.content
+            }
+        self.render("editpost.html", post=post, values=values)
+
+    def post(self, post_subject):
+        if not self.user:
+            self.redirect('/')
+        post = Post.find_by_subject(post_subject)
+        # If user is not owner of the post, redirect with an error
+        # TODO: Show an error
+        if not self.user.owner_of(post):
+            self.redirect("/")
+        else:
+            values = {
+                'subject': self.request.get('subject'),
+                'content': self.request.get('content')}
+
+            if values['subject'] and values['content']:
+                values = {
+                    'subject': self.request.get('subject'),
+                    'content': self.request.get('content')}
+
+                post.subject = values['subject']
+                post.content = values['content']
+                post.put()
+                self.redirect('/posts/%s' % post.linkified_subject())
+            else:
+                error = "we need subject and content!"
+                self.render("editpost.html", values=values, error=error)
+
+
+class DeletePostHandler(Handler):
+    def post(self, post_subject):
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_delete = Post.find_by_subject(post_subject)
+        if not self.user.owner_of(post_to_delete):
+            self.render("HomeHandler")
+        else:
+            post_to_delete.delete()
+            self.redirect('/')
+
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
     ('/login', LogInHandler),
     ('/logout', LogOutHandler),
     ('/newpost', NewPostHandler),
-    ('/posts/([0-9]+)', PostHandler)
+    ('/posts/([^/]+)', ShowPostHandler),
+    ('/posts/([^/]+)/edit', EditPostHandler),
+    ('/posts/([^/]+)/delete', DeletePostHandler)
 ], debug=True)

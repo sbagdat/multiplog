@@ -17,6 +17,9 @@ class User(db.Model):
     def find_by_username(cls, username):
         return User.all().filter('user =', username).get()
 
+    def owner_of(self, post):
+        return post.user_id == self.key().id()
+
 
 class BlogUser():
     def __init__(self, values):

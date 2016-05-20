@@ -6,7 +6,7 @@
                 col-md-6  col-md-offset-3">
       <div class="panel panel-default">
         <div class="panel-heading">
-          New Post
+          Edit Post
         </div>
         <div class="panel-body">
           {% if error %}
@@ -44,13 +44,13 @@
                 <textarea class="form-control"
                           id="content"
                           rows="10"
-                          name="content"></textarea>
+                          name="content">{{values['content']}}</textarea>
               </div>
 
               <div class="form-group">
                   <button type="submit"
                           class="btn btn-primary col-xs-12">
-                      Save
+                      Update
                   </button>
               </div>
             </form>

@@ -11,3 +11,7 @@
 .btn-flat {
   border-radius: 0;
 }
+.btn-delete,
+.delete-form {
+  display: inline;
+}
