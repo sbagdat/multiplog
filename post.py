@@ -9,7 +9,11 @@ class Post(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
     user_id = db.IntegerProperty(required=True)
 
-    def render(self, user=None):
+    @classmethod
+    def find_by_subject(cls, post_subject):
+        post_subject = post_subject.replace('-', ' ')
+        return Post.all().filter('subject =', post_subject).get()
+
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("_post.html", post=self, user=user)
 
