@@ -19,6 +19,10 @@
 <br>
 <div class="row">
   <p class="col-xs-12">
-    {{post._render_text | safe}}
+    {% if truncated %}
+      {{post._truncated_render_text | safe}}
+    {% else %}
+      {{post._render_text | safe}}
+    {% endif %}
   </p>
 </div>

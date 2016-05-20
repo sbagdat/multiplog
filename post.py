@@ -14,8 +14,19 @@ class Post(db.Model):
         post_subject = post_subject.replace('-', ' ')
         return Post.all().filter('subject =', post_subject).get()
 
+    def render(self, user=None, truncated=False):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("_post.html", post=self, user=user)
+        if len(self._render_text) < 135:
+            self._truncated_render_text = self._render_text
+        else:
+            text = self._render_text[:(self._render_text.find(' ', 130))+1]
+            self._truncated_render_text = text + (
+                "... <a href='/posts/%s'>more</a>" % self.linkified_subject())
+        return render_str(
+            "_post.html",
+            post=self,
+            user=user,
+            truncated=truncated)
 
     def username(self):
         return User.find_by_id(self.user_id).user
