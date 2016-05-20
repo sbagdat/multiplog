@@ -221,11 +221,9 @@ class NewCommentHandler(Handler):
 
             self.redirect('/posts/%s' % post_to_comment.linkified_subject())
         else:
-            comment_error = "Comment body cannot be empty"
             self.render(
                 "post.html",
-                post=post_to_comment,
-                comment_error=comment_error)
+                post=post_to_comment)
 
 
 app = webapp2.WSGIApplication([
@@ -237,5 +235,5 @@ app = webapp2.WSGIApplication([
     ('/posts/([^/]+)', ShowPostHandler),
     ('/posts/([^/]+)/edit', EditPostHandler),
     ('/posts/([^/]+)/delete', DeletePostHandler),
-    ('/posts/([^/]+)/comments/new', NewCommentHandler),
+    ('/posts/([^/]+)/comments/new', NewCommentHandler)
 ], debug=True)

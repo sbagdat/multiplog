@@ -35,11 +35,6 @@
 <div class="row comments" id="comments">
   {% if user %}
   <div class="col-xs-12 col-md-6">
-    {% if content_error %}
-      <div class=error>
-        {{content_error}}
-      </div>
-    {% endif %}
     <form class="form-horizontal comment-form" action="/posts/{{post.linkified_subject()}}/comments/new" method="post">
       <div class="form-group">
         <label class="control-label"
@@ -65,10 +60,27 @@
     </div>
   {% endif %}
   <div class="col-xs-12">
-    <h3>Comments({{post._comments_count}})</h3>
+    <h3>Comments ({{post._comments_count}})</h3>
     {% for comment in post.comments() %}
     <blockquote>
-      <p>{{comment.content}}</p>
+      <div>
+        {{comment.content}}
+        <br>
+        <small>
+          {{comment.created_at.strftime("%b %d, %Y")}} -
+          {% if user and user.owner_of(comment) %}
+            by you
+            <a href="/posts/{{post.linkified_subject()}}/comments/{{comment.key().id()}}/edit" class="btn btn-link btn-xs">Edit</a> |
+            <form method="post"
+                  action="/posts/{{post.linkified_subject()}}/comments/{{comment.key().id()}}/delete"
+                  class="delete-form">
+              <button type=submit class="btn btn-link btn-xs btn-delete">Delete</button>
+            </form>
+          {% else %}
+            by {{comment.username()}}
+          {% endif %}
+        </small>
+      </div>
     </blockquote>
     {% endfor %}
   </div>
