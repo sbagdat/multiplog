@@ -2,8 +2,9 @@ import webapp2
 from google.appengine.ext import db
 from crypto import *
 from helpers import render_str, blog_key
-from post import Post
 from user import User, BlogUser
+from post import Post
+from comment import Comment
 
 
 class Handler(webapp2.RequestHandler):
@@ -199,6 +200,34 @@ class DeletePostHandler(Handler):
             self.redirect('/')
 
 
+class NewCommentHandler(Handler):
+    def post(self, post_subject):
+        if not self.user:
+            self.redirect('/')
+
+        post_to_comment = Post.find_by_subject(post_subject)
+        content = self.request.get('content')
+
+        if content:
+            comment = Comment(
+                parent=blog_key(),
+                content=content,
+                post_id=post_to_comment.key().id(),
+                user_id=self.user.key().id())
+            comment.put()
+
+            post_to_comment.comments_count += 1
+            post_to_comment.put()
+
+            self.redirect('/posts/%s' % post_to_comment.linkified_subject())
+        else:
+            comment_error = "Comment body cannot be empty"
+            self.render(
+                "post.html",
+                post=post_to_comment,
+                comment_error=comment_error)
+
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
@@ -207,5 +236,6 @@ app = webapp2.WSGIApplication([
     ('/newpost', NewPostHandler),
     ('/posts/([^/]+)', ShowPostHandler),
     ('/posts/([^/]+)/edit', EditPostHandler),
-    ('/posts/([^/]+)/delete', DeletePostHandler)
+    ('/posts/([^/]+)/delete', DeletePostHandler),
+    ('/posts/([^/]+)/comments/new', NewCommentHandler),
 ], debug=True)

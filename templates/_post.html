@@ -35,6 +35,11 @@
 <div class="row comments" id="comments">
   {% if user %}
   <div class="col-xs-12 col-md-6">
+    {% if content_error %}
+      <div class=error>
+        {{content_error}}
+      </div>
+    {% endif %}
     <form class="form-horizontal comment-form" action="/posts/{{post.linkified_subject()}}/comments/new" method="post">
       <div class="form-group">
         <label class="control-label"
@@ -62,7 +67,9 @@
   <div class="col-xs-12">
     <h3>Comments({{post._comments_count}})</h3>
     {% for comment in post.comments() %}
-      {{comment.content}}
+    <blockquote>
+      <p>{{comment.content}}</p>
+    </blockquote>
     {% endfor %}
   </div>
 </div>

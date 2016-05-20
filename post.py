@@ -35,7 +35,7 @@ class Post(db.Model):
         return User.find_by_id(self.user_id).user
 
     def comments(self):
-        return Comment.all().filter('post_id=', self.key().id())
+        return Comment.all().filter('post_id =', self.key().id())
 
     def linkified_subject(self):
         return self.subject.replace(' ', '-')
