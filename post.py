@@ -8,6 +8,7 @@ class Post(db.Model):
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created_at = db.DateTimeProperty(auto_now_add=True)
+    comments_count = db.IntegerProperty(default=0)
     user_id = db.IntegerProperty(required=True)
 
     @classmethod

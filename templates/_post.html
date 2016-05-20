@@ -32,12 +32,49 @@
 </div>
 
 {% if commented %}
-<div class="row comments">
+<div class="row comments" id="comments">
+  {% if user %}
+  <div class="col-xs-12 col-md-6">
+    <form class="form-horizontal comment-form" action="/posts/{{post.linkified_subject()}}/comments/new" method="post">
+      <div class="form-group">
+        <label class="control-label"
+               for="content">
+          Your Comment
+        </label>
+        <textarea class="form-control"
+                  id="content"
+                  rows="8"
+                  name="content"></textarea>
+      </div>
+      <div class="form-group">
+          <button type="submit"
+                  class="btn btn-primary col-xs-12">
+              Post comment
+          </button>
+      </div>
+    </form>
+  </div>
+  {% else %}
+    <div class="col-xs-12">
+      You need to <a href="/login">login</a> to post comments.
+    </div>
+  {% endif %}
   <div class="col-xs-12">
-    <h3>Comments</h3>
+    <h3>Comments({{post._comments_count}})</h3>
     {% for comment in post.comments() %}
       {{comment.content}}
     {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="row comments-small">
+  <div class="col-xs-12">
+    <small>
+      <a href="/posts/{{post.linkified_subject()}}#comments">
+        {{post._comments_count}}
+        Comments
+      </a>
+    </small>
   </div>
 </div>
 {% endif %}
