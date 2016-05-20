@@ -2,3 +2,4 @@
 # secret.txt
 .DS_Store
 *.pyc
+.idea

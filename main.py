@@ -1,18 +1,8 @@
-#!/usr/bin/env python
 import webapp2
 import jinja2
 from google.appengine.ext import db
 from custom import *
-
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(template_dir),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
-
-def render_str(template, **params):
-    t = JINJA_ENVIRONMENT.get_template(template)
-    return t.render(params)
+from helpers import render_str
 
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
