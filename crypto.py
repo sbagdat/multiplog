@@ -27,7 +27,7 @@ class Cryptographer():
         if secure_val == self.make_secure_val(val):
             return val
 
-    def make_salt(self, length = 5):
+    def make_salt(self, length=5):
         return ''.join(random.choice(letters) for x in xrange(length))
 
     def make_pw_hash(self, name, pw):

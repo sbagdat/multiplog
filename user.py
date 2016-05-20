@@ -11,7 +11,7 @@ class User(db.Model):
 
     @classmethod
     def find_by_id(cls, id):
-        return User.get_by_id(id, parent = users_key())
+        return User.get_by_id(id, parent=users_key())
 
     @classmethod
     def find_by_username(cls, username):

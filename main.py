@@ -6,7 +6,6 @@ from post import Post
 from user import User, BlogUser
 
 
-
 class Handler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
@@ -39,6 +38,7 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
+
 class SignUpHandler(Handler):
     def render_signup_form(self, values={}, errors={}):
         self.render('signup.html', values=values, errors=errors)
@@ -63,34 +63,45 @@ class SignUpHandler(Handler):
         else:
             self.render_signup_form(values=values, errors=new_user.errors)
 
+
 class LogInHandler(Handler):
     def get(self):
         if not self.user:
             self.render('login.html')
         else:
             self.redirect('/')
+
     def post(self):
         username = self.request.get('user')
         password = self.request.get('pswd')
         if not (username and password):
-            self.render('login.html', error='Enter both username and password!')
+            self.render(
+                'login.html',
+                error='Enter both username and password!')
         else:
             user = User.find_by_username(username)
-            if user and Cryptographer().valid_pw(username, password, user.pswd):
+            if (user and Cryptographer().valid_pw(username,
+                                                  password,
+                                                  user.pswd)):
                 self.login(user.key().id())
                 self.redirect('/')
             else:
-                self.render('login.html', error='Wrong username and/or  password!')
+                self.render(
+                    'login.html',
+                    error='Wrong username and/or  password!')
+
 
 class LogOutHandler(Handler):
     def get(self):
         self.logout()
         self.redirect('/')
 
+
 class HomeHandler(Handler):
     def get(self):
         posts = Post.all().order('-created_at')
-        self.render('front.html', posts = posts)
+        self.render('front.html', posts=posts)
+
 
 class NewPostHandler(Handler):
     def get(self):
@@ -108,12 +119,16 @@ class NewPostHandler(Handler):
             'content': self.request.get('content')}
 
         if values['subject'] and values['content']:
-            post = Post(parent = blog_key(), subject= values['subject'], content = values['content'])
+            post = Post(
+                parent=blog_key(),
+                subject=values['subject'],
+                content=values['content'])
             post.put()
             self.redirect('/posts/%s' % str(post.key().id()))
         else:
             error = "we need subject and content!"
             self.render("newpost.html", values=values, error=error)
+
 
 class PostHandler(Handler):
     def get(self, post_id):
@@ -124,7 +139,7 @@ class PostHandler(Handler):
             self.error(404)
             return
 
-        self.render("post.html", post = post)
+        self.render("post.html", post=post)
 
 
 app = webapp2.WSGIApplication([
