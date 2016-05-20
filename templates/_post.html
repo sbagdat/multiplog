@@ -4,12 +4,17 @@
   </h1>
 </div>
 <div class="row">
-    <small class="col-xs-12">
-      Posted by {{post.username()}} at
-      <strong>
-        {{post.created_at.strftime("%b %d, %Y")}}
-      </strong>
-    </small>
+    <p class="col-xs-12">
+      {{post.created_at.strftime("%b %d, %Y")}},
+      Posted by
+      {% if user and user.owner_of(post) %}
+        you
+        <a href="/posts/{{post.linkified_subject()}}/edit" class="btn btn-default btn-xs">Edit</a>
+        <a href="/posts/{{post.linkified_subject()}}/delete" class="btn btn-default btn-xs">Delete</a>
+      {% else %}
+          {{post.username()}}
+      {% endif %}
+    </p>
 </div>
 <br>
 <div class="row">
