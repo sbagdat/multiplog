@@ -4,17 +4,21 @@
   </h1>
 </div>
 <div class="row">
-    <p class="col-xs-12">
+    <div class="col-xs-12">
       {{post.created_at.strftime("%b %d, %Y")}},
       Posted by
       {% if user and user.owner_of(post) %}
         you
         <a href="/posts/{{post.linkified_subject()}}/edit" class="btn btn-default btn-xs">Edit</a>
-        <a href="/posts/{{post.linkified_subject()}}/delete" class="btn btn-default btn-xs">Delete</a>
+        <form method="post"
+              action="/posts/{{post.linkified_subject()}}/delete"
+              class="delete-form">
+          <button type=submit class="btn btn-default btn-xs btn-delete">Delete</button>
+        </form>
       {% else %}
           {{post.username()}}
       {% endif %}
-    </p>
+    </div>
 </div>
 <br>
 <div class="row">

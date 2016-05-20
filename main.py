@@ -180,10 +180,24 @@ class EditPostHandler(Handler):
                 post.subject = values['subject']
                 post.content = values['content']
                 post.put()
-                self.redirect('/posts/%s' % str(post.key().id()))
+                self.redirect('/posts/%s' % post.linkified_subject())
             else:
                 error = "we need subject and content!"
                 self.render("editpost.html", values=values, error=error)
+
+
+class DeletePostHandler(Handler):
+    def post(self, post_subject):
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_delete = Post.find_by_subject(post_subject)
+        if not self.user.owner_of(post_to_delete):
+            self.render("HomeHandler")
+        else:
+            post_to_delete.delete()
+            self.redirect('/')
+
 
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
@@ -193,4 +207,5 @@ app = webapp2.WSGIApplication([
     ('/newpost', NewPostHandler),
     ('/posts/([^/]+)', ShowPostHandler),
     ('/posts/([^/]+)/edit', EditPostHandler),
+    ('/posts/([^/]+)/delete', DeletePostHandler)
 ], debug=True)
