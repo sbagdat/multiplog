@@ -30,10 +30,10 @@ class Cryptographer():
     def make_salt(self, length=5):
         return ''.join(random.choice(letters) for x in xrange(length))
 
-    def make_pw_hash(self, name, pw):
+    def password_hash(self, name, pw):
         h = hashlib.sha256(name + pw + self.salt).hexdigest()
         return '%s,%s' % (self.salt, h)
 
-    def valid_pw(self, name, password, h):
+    def valid_password(self, name, password, h):
         self.salt = h.split(',')[0]
-        return h == self.make_pw_hash(name, password)
+        return h == self.password_hash(name, password)

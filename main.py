@@ -1,16 +1,16 @@
 import webapp2
 from google.appengine.ext import db
-from crypto import *
-from helpers import render_str, blog_key
-from user import User, BlogUser
+from crypto import Cryptographer
+from helpers import render_str
+from user import User
 from post import Post
-from comment import Comment
 
 
-class Handler(webapp2.RequestHandler):
+class ApplicationHandler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         user_id = self.read_secure_cookie('user_id')
+        # Attach current user to every handler
         self.user = user_id and User.find_by_id(int(user_id))
 
     def write(self, *a, **kw):
@@ -40,200 +40,76 @@ class Handler(webapp2.RequestHandler):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
 
-class SignUpHandler(Handler):
-    def render_signup_form(self, values={}, errors={}):
-        self.render('signup.html', values=values, errors=errors)
-
+class SignUpHandler(ApplicationHandler):
     def get(self):
+        # Any user logged in, then redirect to homepage, else render the form
         if not self.user:
-            self.render_signup_form()
+            self.render('signup.html', values=None, errors=None)
         else:
             self.redirect('/')
 
     def post(self):
         values = {
-          'username': (self.request.get('user') or ''),
-          'password': (self.request.get('pswd') or ''),
-          'password_confirmation': (self.request.get('pswd_verify') or ''),
-          'email': (self.request.get('email') or '')}
+            'username': self.request.get('username').strip().lower(),
+            'password': self.request.get('password'),
+            'password_confirmation': self.request.get('password_confirmation'),
+            'email': self.request.get('email').strip().lower()}
 
-        new_user = BlogUser(values)
-        if new_user.save():
-            self.login(new_user.id)
+        # If user is successfully saved to database, it returns the user,
+        # otherwise it returns errors occured during validation process
+        new_user = errors = User.save(values)
+        if new_user.__class__ == User:
+            # User successfully created_at
+            self.login(new_user.key().id())
             self.redirect('/')
         else:
-            self.render_signup_form(values=values, errors=new_user.errors)
+            # User information has some errors
+            self.render('signup.html', values=values, errors=errors)
 
 
-class LogInHandler(Handler):
+class SignInHandler(ApplicationHandler):
     def get(self):
+        # Any user logged in, then redirect to homepage, else render the form
         if not self.user:
             self.render('login.html')
         else:
             self.redirect('/')
 
     def post(self):
-        username = self.request.get('user')
-        password = self.request.get('pswd')
+        username = self.request.get('username').strip().lower()
+        password = self.request.get('password')
+        # If user/password matches redirect to homepage,
+        # otherwise re-render the form with errors
         if not (username and password):
             self.render(
-                'login.html',
-                error='Enter both username and password!')
+                'login.html', error='Enter both username and password!')
         else:
             user = User.find_by_username(username)
-            if (user and Cryptographer().valid_pw(username,
-                                                  password,
-                                                  user.pswd)):
+            if user and Cryptographer().valid_password(
+                    username, password, user.password):
                 self.login(user.key().id())
                 self.redirect('/')
             else:
                 self.render(
-                    'login.html',
-                    error='Wrong username and/or  password!')
+                    'login.html', error='Wrong username and/or  password!')
 
 
-class LogOutHandler(Handler):
+class SignOutHandler(ApplicationHandler):
     def get(self):
         self.logout()
         self.redirect('/')
 
 
-class HomeHandler(Handler):
+class HomeHandler(ApplicationHandler):
     def get(self):
         posts = Post.all().order('-created_at')
         self.render('front.html', posts=posts)
 
 
-class NewPostHandler(Handler):
-    def get(self):
-        if self.user:
-            self.render("newpost.html", values="")
-        else:
-            self.redirect("/login")
-
-    def post(self):
-        if not self.user:
-            self.redirect('/')
-
-        values = {
-            'subject': self.request.get('subject'),
-            'content': self.request.get('content')}
-
-        if values['subject'] and values['content']:
-            post = Post(
-                parent=blog_key(),
-                subject=values['subject'],
-                content=values['content'],
-                user_id=self.user.key().id())
-            post.put()
-            self.redirect('/posts/%s' % post.linkified_subject())
-        else:
-            error = "we need subject and content!"
-            self.render("newpost.html", values=values, error=error)
-
-
-class ShowPostHandler(Handler):
-    def get(self, post_subject):
-        post = Post.find_by_subject(post_subject)
-
-        if not post:
-            self.error(404)
-            return
-
-        self.render("post.html", post=post)
-
-
-class EditPostHandler(Handler):
-    def get(self, post_subject):
-        if not self.user:
-            self.redirect("/login")
-
-        post = Post.find_by_subject(post_subject)
-        # If user is not owner of the post, redirect with an error
-        # TODO: Show an error
-        if not self.user.owner_of(post):
-            self.redirect("/")
-        else:
-            values = {
-                'subject': post.subject,
-                'content': post.content
-            }
-        self.render("editpost.html", post=post, values=values)
-
-    def post(self, post_subject):
-        if not self.user:
-            self.redirect('/')
-        post = Post.find_by_subject(post_subject)
-        # If user is not owner of the post, redirect with an error
-        # TODO: Show an error
-        if not self.user.owner_of(post):
-            self.redirect("/")
-        else:
-            values = {
-                'subject': self.request.get('subject'),
-                'content': self.request.get('content')}
-
-            if values['subject'] and values['content']:
-                values = {
-                    'subject': self.request.get('subject'),
-                    'content': self.request.get('content')}
-
-                post.subject = values['subject']
-                post.content = values['content']
-                post.put()
-                self.redirect('/posts/%s' % post.linkified_subject())
-            else:
-                error = "we need subject and content!"
-                self.render("editpost.html", values=values, error=error)
-
-
-class DeletePostHandler(Handler):
-    def post(self, post_subject):
-        if not self.user:
-            self.redirect("/login")
-
-        post_to_delete = Post.find_by_subject(post_subject)
-        if not self.user.owner_of(post_to_delete):
-            self.render("HomeHandler")
-        else:
-            post_to_delete.delete()
-            self.redirect('/')
-
-
-class NewCommentHandler(Handler):
-    def post(self, post_subject):
-        if not self.user:
-            self.redirect('/')
-
-        post_to_comment = Post.find_by_subject(post_subject)
-        content = self.request.get('content')
-
-        if content:
-            comment = Comment(
-                parent=blog_key(),
-                content=content,
-                post_id=post_to_comment.key().id(),
-                user_id=self.user.key().id())
-            comment.put()
-
-            post_to_comment.comments_count += 1
-            post_to_comment.put()
-
-            self.redirect('/posts/%s' % post_to_comment.linkified_subject())
-        else:
-            self.render(
-                "post.html",
-                post=post_to_comment)
-
-
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
-    ('/login', LogInHandler),
-    ('/logout', LogOutHandler),
-    ('/newpost', NewPostHandler),
-    ('/posts/([^/]+)', ShowPostHandler),
-    ('/posts/([^/]+)/edit', EditPostHandler),
-    ('/posts/([^/]+)/delete', DeletePostHandler),
-    ('/posts/([^/]+)/comments/new', NewCommentHandler)
+    ('/login', SignInHandler),
+    ('/logout', SignOutHandler),
+    ('/posts/new', NewPostHandler),
 ], debug=True)

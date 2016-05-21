@@ -5,77 +5,45 @@ from helpers import users_key
 
 
 class User(db.Model):
-    user = db.StringProperty(required=True)
-    pswd = db.StringProperty(required=True)
+    username = db.StringProperty(required=True)
+    password = db.StringProperty(required=True)
     email = db.StringProperty()
+
+    # Used for making password hash before saving
+    cryptographer = Cryptographer()
 
     @classmethod
     def find_by_id(cls, id):
-        return User.get_by_id(id, parent=users_key())
+        """Find a user by its id"""
+        return User.get_by_id(id)
 
     @classmethod
     def find_by_username(cls, username):
-        return User.all().filter('user =', username).get()
+        """Find a user by its username"""
+        return User.all().filter('username =', username).get()
 
-    def owner_of(self, post):
-        return post.user_id == self.key().id()
-
-
-class BlogUser():
-    def __init__(self, values):
-        self.initialize_variables(values)
-        self.cryptographer = Cryptographer()
-        self.check_for_errors()
-
-    def initialize_variables(self, values):
-        self.id = None
-        self.username = values['username']
-        self.password = values['password']
-        self.password_confirmation = values['password_confirmation']
-        self.email = values['email']
-        self.errors = {}
-
-    def check_for_errors(self):
-        # clean old errors
-        self.errors = {}
-        if not self.valid_username():
-            self.errors['username'] = 'not valid username'
-        if not self.valid_password():
-            self.errors['password'] = 'not valid password.'
-        elif not self.match_passwords():
-            self.errors['password_confirmation'] = "passwords didn't match"
-        if not self.valid_email():
-            self.errors['email'] = 'not valid email.'
-        return self.errors
-
-    def have_errors(self):
-        return self.errors != []
-
-    def valid_username(self):
-        return self.username and self.regexp('username').match(self.username)
-
-    def valid_password(self):
-        return self.password and self.regexp('password').match(self.password)
-
-    def match_passwords(self):
-        return self.password == self.password_confirmation
-
-    def valid_email(self):
-        return not self.email or self.regexp('email').match(self.email)
-
-    def save(self):
-        if self.errors:
-            return False
-        elif self.user_exist():
-            return False
+    @classmethod
+    def save(cls, values):
+        """
+            If user data is valid, then save it to the database,
+            otherwise return errors
+        """
+        valid, errors = User.is_valid_candidate(values)
+        new_user = ""
+        if valid:
+            new_user = User(
+                username=values['username'],
+                password=User.cryptographer.password_hash(
+                    values['username'],
+                    values['password']),
+                email=values['email'])
+            try:
+                new_user.put()
+                return new_user
+            except:
+                raise
         else:
-            new_user = User(parent=users_key(),
-                            user=self.username,
-                            pswd=self.password_hash(),
-                            email=self.email)
-            new_user.put()
-            self.id = new_user.key().id()
-            return True
+            return errors
 
     @staticmethod
     def regexp(key):
@@ -85,13 +53,37 @@ class BlogUser():
             'email':    re.compile(r'^[\S]+@[\S]+\.[\S]+$')
         }[key]
 
-    def user_exist(self):
-        user = User.all().filter('user =', self.username).get()
-        if user:
-            self.errors['exist'] = 'User already exist, try different username'
-            return True
-        else:
-            return False
+    @staticmethod
+    def is_valid_candidate(values):
+        """Check user-entered values are valid to become a new user"""
+        errors = {}
+        username = values['username']
+        password = values['password']
+        password_confirmation = values['password_confirmation']
+        email = values['email']
 
-    def password_hash(self):
-        return self.cryptographer.make_pw_hash(self.username, self.password)
+        # check username is invalid or already exists
+        if not (username and User.regexp('username').match(username)):
+            errors['username'] = 'invalid username'
+        if User.find_by_username(username):
+            errors['username'] = 'already exists'
+
+        # check password is invalid or doesn't match with confirmation
+        if not (password and User.regexp('password').match(password)):
+            errors['password'] = 'invalid password'
+        elif not password == password_confirmation:
+            errors['password_confirmation'] = "passwords don't match"
+
+        # check email is valid(empty email is also valid)
+        if email and not User.regexp('email').match(email):
+            errors['email'] = 'invalid email'
+
+        # If errors found return them with a False value,
+        # otherwise return True
+        if errors:
+            return (False, errors)
+        else:
+            return (True, {})
+
+    def owner_of(self, thing):
+        return thing.user == self

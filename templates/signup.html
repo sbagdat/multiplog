@@ -1,64 +1,46 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="row">
-    <div class="col-xs-12
-                col-sm-10 col-sm-offset-1
-                col-md-6  col-md-offset-3">
+    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-6  col-md-offset-3">
       <div class="panel panel-default">
         <div class="panel-heading">
           Sign Up / Join Us
         </div>
         <div class="panel-body">
-          <form method="post"
-                class="signup-form
-                       form-horizontal">
-              <div class="form-group
-                          {{'has-error' if errors['username']}}">
-                <label class="control-label"
-                       for="user">
+          <form method="post" class="signup-form form-horizontal">
+              <div class="form-group {{'has-error' if errors['username']}}">
+                <label for="username" class="control-label" >
                   Username
                 </label>
-                <input type="text"
-                       class="form-control"
-                       id="user"
-                       name="user"
-                       placeholder="Username"
-                       value="{{values['username']}}"
-                       autofocus>
+                <input type="text" name="username" class="form-control"
+                       id="username" value="{{values['username']}}" autofocus>
                 {% if errors['username'] %}
-                <span class="help-block
-                             error-message">
+                <span class="help-block error-message">
                   {{errors['username']}}
                 </span>
                 {% endif %}
               </div>
-              <div class="form-group
-                          {{'has-error' if errors['password']}}">
-                  <label class="control-label" for="pswd">
+              <div class="form-group {{'has-error' if errors['password']}}">
+                  <label class="control-label" for="password">
                     Password
                   </label>
-                  <input type="password"
-                         class="form-control"
-                         id="pswd"
-                         name="pswd"
-                         placeholder="Password">
+                  <input type="password" name="password"
+                         class="form-control" id="password">
                   {% if errors['password'] %}
-                    <span class="help-block
-                                error-message">
+                    <span class="help-block error-message">
                       {{errors['password']}}
                     </span>
                   {% endif %}
               </div>
-              <div class="form-group
-                          {{'has-error' if errors['password_confirmation']}}">
-                  <label class="control-label"
-                         for="pswd_verify">
-                    Verify Password
+              <div class="{{'has-error' if errors['password_confirmation']}}
+                          form-group">
+                  <label class="control-label" for="password_confirmation">
+                    password Confirmation
                   </label>
-                  <input type="password"
-                         class="form-control"
-                         id="pswd_verify"
-                         name="pswd_verify"
+                  <input type="password" name="password_confirmation"
+                         id="pswd_verify" class="form-control"
+
+
                          placeholder="Verify password">
                   {% if errors['password_confirmation'] %}
                     <span class="help-block
