@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2">
+      <div class="panel panel-default">
+        <div class="panel-heading">New Post</div>
+        <div class="panel-body">
+          <form method="post" class="signup-form form-horizontal">
+              <div class="form-group {{'has-error' if errors['subject']}}">
+                <label for="subject" class="control-label">Subject</label>
+                <input type="text" name="subject" id="subject" autofocus
+                       value="{{values['subject']}}" class="form-control">
+                {% if errors['subject'] %}
+                  <span class="help-block error-message">
+                   {{errors['subject']}}
+                  </span>
+                {% endif %}
+              </div>
+              <div class="form-group {{'has-error' if errors['content']}}">
+                <label for="content" class="control-label">Content</label>
+                <textarea name="content" rows="16" id="content"
+                          class="form-control">{{values['content']}}</textarea>
+                {% if errors['content'] %}
+                 <span class="help-block error-message">
+                  {{errors['content']}}
+                 </span>
+                {% endif %}
+              </div>
+              <div class="form-group">
+                  <button type="submit" class="btn btn-primary col-xs-12">
+                      Save
+                  </button>
+              </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

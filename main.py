@@ -4,6 +4,7 @@ from crypto import Cryptographer
 from helpers import render_str
 from user import User
 from post import Post
+from comment import Comment
 
 
 class ApplicationHandler(webapp2.RequestHandler):
@@ -106,10 +107,164 @@ class HomeHandler(ApplicationHandler):
         self.render('front.html', posts=posts)
 
 
+class NewPostHandler(ApplicationHandler):
+    def get(self):
+        # If any user does not logged in redirect to homepage,
+        # otherwise render the new post form
+        if self.user:
+            self.render("/posts/new.html", values=None, errors=None)
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect('/')
+
+        values = {
+            'subject': self.request.get('subject').strip(),
+            'content': self.request.get('content').strip()}
+
+        if values['subject'] and values['content']:
+            post = Post(
+                subject=values['subject'],
+                content=values['content'],
+                user=self.user)
+            post.put()
+            self.redirect(post.link_to('show'))
+        else:
+            errors = {}
+            if not values['subject']:
+                errors['subject'] = "can't be blank"
+            if not values['content']:
+                errors['content'] = "can't be blank"
+            self.render("/posts/new.html", values=values, errors=errors)
+
+
+class ShowPostHandler(ApplicationHandler):
+    def get(self, post_subject):
+        post = Post.find_by_subject(post_subject)
+
+        if not post:
+            self.error(404)
+            return self.render('404.html')
+
+        self.render("/posts/post.html", post=post, errors=None)
+
+    def post(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect('/')
+
+        # Post page contains a form to post comments,
+        # so a post request comes, lets put that comment into database
+        post_to_comment = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_comment:
+            self.error(404)
+            return self.render('404.html')
+
+        content = self.request.get('content').strip()
+
+        if content:
+            comment = Comment(
+                content=content,
+                post=post_to_comment,
+                user=self.user)
+            comment.put()
+            self.redirect(post_to_comment.link_to('show'))
+        else:
+            errors = {'content': "can't be blank"}
+            self.render(
+                "/posts/post.html", post=post_to_comment,
+                errors=errors)
+
+
+class EditPostHandler(ApplicationHandler):
+    def get(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_update = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_update:
+            self.error(404)
+            return self.render('404.html')
+        # If user is not owner of the post, redirect with an error
+        if not self.user.owner_of(post_to_update):
+            self.redirect("/")
+        else:
+            values = {
+                'subject': post_to_update.subject,
+                'content': post_to_update.content}
+
+        self.render(
+            "/posts/edit.html", post=post_to_update,
+            values=values, errors=None)
+
+    def post(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect('/')
+        post_to_update = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_update:
+            self.error(404)
+            return self.render('404.html')
+        # If user is not owner of the post, redirect with an error
+        # TODO: Show an error
+        if not self.user.owner_of(post_to_update):
+            self.redirect("/")
+        else:
+            values = {
+                'subject': self.request.get('subject'),
+                'content': self.request.get('content')}
+
+            if values['subject'] and values['content']:
+                values = {
+                    'subject': self.request.get('subject').strip(),
+                    'content': self.request.get('content').strip()}
+
+                post_to_update.subject = values['subject']
+                post_to_update.content = values['content']
+                post_to_update.put()
+                self.redirect(post_to_update.link_to('show'))
+            else:
+                errors = {}
+                if not values['subject']:
+                    errors['subject'] = "can't be blank"
+                if not values['content']:
+                    errors['content'] = "can't be blank"
+                self.render("/posts/edit.html", values=values, errors=errors)
+
+
+class DeletePostHandler(ApplicationHandler):
+    # not available for get requests
+
+    def post(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_delete = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_delete:
+            self.error(404)
+            return self.render('404.html')
+        if not self.user.owner_of(post_to_delete):
+            self.redirect("/")
+        else:
+            post_to_delete.delete()
+            self.redirect('/')
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
     ('/login', SignInHandler),
     ('/logout', SignOutHandler),
     ('/posts/new', NewPostHandler),
+    ('/posts/([^/]+)', ShowPostHandler),
+    ('/posts/([^/]+)/edit', EditPostHandler),
+    ('/posts/([^/]+)/delete', DeletePostHandler)
 ], debug=True)

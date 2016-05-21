@@ -86,4 +86,4 @@ class User(db.Model):
             return (True, {})
 
     def owner_of(self, thing):
-        return thing.user == self
+        return thing.user.key() == self.key()

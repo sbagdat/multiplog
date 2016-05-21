@@ -1,0 +1,20 @@
+<blockquote>
+  <div>{{comment.content}}<br>
+    <small>{{comment.ctime}} -
+      {% if user and user.owner_of(comment) %}
+        by <strong>you</strong>
+        <a href="{{comment.link_to('edit')}}"class="btn btn-link btn-xs">
+          Edit
+        </a> |
+        <form method="post" action="{{comment.link_to('delete')}}"
+              class="delete-form">
+          <button type=submit class="btn btn-link btn-xs btn-delete">
+            Delete
+          </button>
+        </form>
+      {% else %}
+        by <strong>{{comment.username()}}</strong>
+      {% endif %}
+    </small>
+  </div>
+</blockquote>

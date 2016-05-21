@@ -41,13 +41,13 @@
     <!--  End Navigation-->
 
     <div class="container">
-      <div class="row">
-        <div class="col-xs-12">
-          <a href="/newpost" class="btn btn-success">New Blog Post</a>
-          {% if user %}
-          {% endif %}
+      {% if user %}
+        <div class="row">
+          <div class="col-xs-12">
+            <a href="/posts/new" class="btn btn-success">New Blog Post</a>
+          </div>
         </div>
-      </div>
+      {% endif %}
       {% block content %}
         {# Template content goes here #}
       {% endblock %}

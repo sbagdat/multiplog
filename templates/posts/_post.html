@@ -1,0 +1,76 @@
+<div class="page-header">
+  <h1><a href="{{post.link_to('show')}}">{{post.subject}}</a></h1>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+      {{post.ctime}} - posted by
+      {% if user and user.owner_of(post) %}
+        <strong>you</strong>
+        <a href="{{post.link_to('edit')}}" class="btn btn-default btn-xs">Edit</a>
+        <form method="post" action="{{post.link_to('delete')}}" class="delete-form">
+          <button type=submit class="btn btn-default btn-xs btn-delete">
+            Delete
+          </button>
+        </form>
+      {% else %}
+          <strong>{{post.username()}}</strong>
+      {% endif %}
+    </div>
+</div>
+<!-- TODO: Style upper row, and remove br -->
+<br>
+<div class="row">
+  <div class="col-xs-12">
+    {% if truncated %}
+      {{post.truncated_text() | safe}}
+    {% else %}
+      {{post.render_text() | safe}}
+    {% endif %}
+  </div>
+</div>
+
+{% if commented %}
+  <div id="comments" class="row comments">
+    {% if user %}
+      <div class="col-xs-12 col-md-6">
+        <form method="post" class="form-horizontal comment-form" >
+          <div class="form-group {{'has-error' if errors['content']}}">
+            <label for="content" class="control-label">Comment</label>
+            <textarea name="content" rows="8" id="content"
+                      class="form-control"></textarea>
+            {% if errors['content'] %}
+             <span class="help-block error-message">
+              {{errors['content']}}
+             </span>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary col-xs-12">
+                Post comment
+            </button>
+          </div>
+        </form>
+      </div>
+    {% else %}
+      <div class="col-xs-12 warn-login">
+        You need to <a href="/login">login</a> to post comments.
+      </div>
+    {% endif %}
+    <div class="col-xs-12">
+      <h4>Comments ({{post.comment_set.count()}})</h4>
+      {% for comment in post.comment_set.order('-created_at') %}
+        {{comment.render(user=user) | safe }}
+      {% endfor %}
+    </div>
+  </div>
+{% else %}
+  <div class="row comments-small">
+    <div class="col-xs-12">
+      <small>
+        <a href="{{post.link_to('show')}}#comments">
+          {{post.comment_set.count()}} comments
+        </a>
+      </small>
+    </div>
+  </div>
+{% endif %}

@@ -3,21 +3,30 @@
 .comment-form {
   padding: 10px;
 }
+
 .help-block {
   margin-top: 10px;
 }
+
 .error-message {
   margin-top: 0;
 }
-.btn-flat {
-  border-radius: 0;
-}
+
 .btn-delete,
 .delete-form {
   display: inline;
 }
+
 h3 {
   padding-bottom: 10px;
   border-bottom: 2px solid #333;
   color: #333;
+}
+
+.comments {
+  margin-top: 30px;
+}
+
+.warn-login {
+  font-weight: bold;
 }
