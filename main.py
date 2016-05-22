@@ -215,7 +215,6 @@ class EditPostHandler(ApplicationHandler):
             self.error(404)
             return self.render('404.html')
         # If user is not owner of the post, redirect with an error
-        # TODO: Show an error
         if not self.user.owner_of(post_to_update):
             self.redirect("/")
         else:
@@ -437,4 +436,4 @@ app = webapp2.WSGIApplication([
     ('/comments/([0-9]+)/delete', DeleteCommentHandler),
     ('/comments/([0-9]+)/like', LikeCommentHandler),
     ('/comments/([0-9]+)/dislike', DislikeCommentHandler)
-], debug=True)
+], debug=False)
