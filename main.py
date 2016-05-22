@@ -258,6 +258,65 @@ class DeletePostHandler(ApplicationHandler):
             post_to_delete.delete()
             self.redirect('/')
 
+
+class EditCommentHandler(ApplicationHandler):
+    def get(self, comment_id):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        comment_to_update = Comment.find_by_id(comment_id)
+        if not comment_to_update:
+            self.error(404)
+            return self.render('404.html')
+        if not self.user.owner_of(comment_to_update):
+            self.redirect("/")
+
+        values = {'content': comment_to_update.content}
+        self.render(
+            "/comments/edit.html", comment=comment_to_update,
+            values=values, errors=None)
+
+    def post(self, comment_id):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        comment_to_update = Comment.find_by_id(comment_id)
+        if not comment_to_update:
+            self.error(404)
+            return self.render('404.html')
+        if not self.user.owner_of(comment_to_update):
+            self.redirect("/")
+
+        values = {'content': self.request.get('content').strip()}
+        if values['content']:
+            comment_to_update.content = values['content']
+            comment_to_update.put()
+            self.redirect(comment_to_update.post.link_to('show'))
+
+
+class DeleteCommentHandler(ApplicationHandler):
+    # not available for get requests
+
+    def post(self, comment_id):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        comment_to_delete = Comment.find_by_id(comment_id)
+        if not comment_to_delete:
+            self.error(404)
+            return self.render('404.html')
+        if not self.user.owner_of(comment_to_delete):
+            self.redirect("/")
+
+        # Save post to use after delete
+        parent_post = comment_to_delete.post
+
+        comment_to_delete.delete()
+        self.redirect(parent_post.link_to('show'))
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
@@ -266,5 +325,7 @@ app = webapp2.WSGIApplication([
     ('/posts/new', NewPostHandler),
     ('/posts/([^/]+)', ShowPostHandler),
     ('/posts/([^/]+)/edit', EditPostHandler),
-    ('/posts/([^/]+)/delete', DeletePostHandler)
+    ('/posts/([^/]+)/delete', DeletePostHandler),
+    ('/comments/([0-9]+)/edit', EditCommentHandler),
+    ('/comments/([0-9]+)/delete', DeleteCommentHandler)
 ], debug=True)
