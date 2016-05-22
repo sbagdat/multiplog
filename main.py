@@ -5,6 +5,7 @@ from helpers import render_str
 from user import User
 from post import Post
 from comment import Comment
+from post_like import PostLike
 
 
 class ApplicationHandler(webapp2.RequestHandler):
@@ -317,6 +318,51 @@ class DeleteCommentHandler(ApplicationHandler):
         comment_to_delete.delete()
         self.redirect(parent_post.link_to('show'))
 
+
+class LikePostHandler(ApplicationHandler):
+    def post(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_like = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_like:
+            self.error(404)
+            return self.render('404.html')
+        # If user is owner of the post, redirect with an error
+        if self.user.owner_of(post_to_like):
+            self.redirect("/")
+        elif self.user.liked_post_before(post_to_like):
+            self.redirect("/")
+        else:
+            new_like = PostLike(post=post_to_like, user=self.user)
+            new_like.put()
+        self.redirect('/')
+
+
+class DislikePostHandler(ApplicationHandler):
+    def post(self, post_subject):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        post_to_dislike = Post.find_by_subject(post_subject)
+        # If post couldn't find redirect 404 page
+        if not post_to_dislike:
+            self.error(404)
+            return self.render('404.html')
+
+        if not self.user.liked_post_before(post_to_dislike):
+            self.redirect("/")
+        else:
+            for like in post_to_dislike.postlike_set:
+                if like.user.key() == self.user.key():
+                    like.delete()
+                    break
+        self.redirect('/')
+
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
@@ -326,6 +372,8 @@ app = webapp2.WSGIApplication([
     ('/posts/([^/]+)', ShowPostHandler),
     ('/posts/([^/]+)/edit', EditPostHandler),
     ('/posts/([^/]+)/delete', DeletePostHandler),
+    ('/posts/([^/]+)/like', LikePostHandler),
+    ('/posts/([^/]+)/dislike', DislikePostHandler),
     ('/comments/([0-9]+)/edit', EditCommentHandler),
     ('/comments/([0-9]+)/delete', DeleteCommentHandler)
 ], debug=True)

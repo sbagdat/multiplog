@@ -87,3 +87,9 @@ class User(db.Model):
 
     def owner_of(self, thing):
         return thing.user.key() == self.key()
+
+    def liked_post_before(self, post):
+        for post_like in post.postlike_set:
+            if post_like.user.key() == self.key():
+                return True
+        return False

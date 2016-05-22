@@ -30,3 +30,7 @@ h3 {
 .warn-login {
   font-weight: bold;
 }
+
+body {
+  background: #eee;
+}

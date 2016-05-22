@@ -54,3 +54,7 @@ class Post(db.Model):
             return base_link + '/edit'
         elif action is 'delete':
             return base_link + '/delete'
+        elif action is 'like':
+            return base_link + '/like'
+        elif action is 'dislike':
+            return base_link + '/dislike'
