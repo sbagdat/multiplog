@@ -93,3 +93,9 @@ class User(db.Model):
             if post_like.user.key() == self.key():
                 return True
         return False
+
+    def liked_comment_before(self, comment):
+        for comment_like in comment.commentlike_set:
+            if comment_like.user.key() == self.key():
+                return True
+        return False

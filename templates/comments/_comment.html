@@ -12,8 +12,32 @@
             Delete
           </button>
         </form>
+        <button type="button" class="btn btn-primary btn-xs" disabled>
+          <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+          Like
+        </button> ({{comment.commentlike_set.count()}} Likes)
       {% else %}
         by <strong>{{comment.username()}}</strong>
+        {% if user and user.liked_comment_before(comment) %}
+        <form method="post" action="{{comment.link_to('dislike')}}" class="delete-form">
+          <button type="submit" class="btn btn-danger btn-xs">
+            <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
+            Dislike
+          </button> ({{comment.commentlike_set.count()}} Likes)
+        </form>
+        {% elif user %}
+          <form method="post" action="{{comment.link_to('like')}}" class="delete-form">
+            <button type="submit" class="btn btn-primary btn-xs">
+              <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+              Like
+            </button> ({{comment.commentlike_set.count()}} Likes)
+          </form>
+        {% else %}
+          <button type="button" class="btn btn-primary btn-xs" disabled>
+            <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+            Like
+          </button> ({{comment.commentlike_set.count()}} Likes)
+        {% endif %}
       {% endif %}
     </small>
   </div>

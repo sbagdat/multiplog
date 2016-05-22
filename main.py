@@ -1,11 +1,12 @@
 import webapp2
 from google.appengine.ext import db
 from crypto import Cryptographer
-from helpers import render_str
 from user import User
 from post import Post
 from comment import Comment
 from post_like import PostLike
+from comment_like import CommentLike
+from helpers import render_str
 
 
 class ApplicationHandler(webapp2.RequestHandler):
@@ -256,7 +257,17 @@ class DeletePostHandler(ApplicationHandler):
         if not self.user.owner_of(post_to_delete):
             self.redirect("/")
         else:
+            # delete post likes
+            for like in post_to_delete.postlike_set:
+                like.delete()
+            # delete comment and comment likes
+            for comment in post_to_delete.comment_set:
+                for like in comment.commentlike_set:
+                    like.delete()
+                comment.delete()
+            # finally delete the post's itself
             post_to_delete.delete()
+
             self.redirect('/')
 
 
@@ -315,6 +326,10 @@ class DeleteCommentHandler(ApplicationHandler):
         # Save post to use after delete
         parent_post = comment_to_delete.post
 
+        # delete comment likes before
+        for like in comment_to_delete.commentlike_set:
+            like.delete()
+        # then delete the comment
         comment_to_delete.delete()
         self.redirect(parent_post.link_to('show'))
 
@@ -363,6 +378,50 @@ class DislikePostHandler(ApplicationHandler):
         self.redirect('/')
 
 
+class LikeCommentHandler(ApplicationHandler):
+    def post(self, comment_id):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        comment_to_like = Comment.find_by_id(comment_id)
+        # If comment couldn't find redirect 404 page
+        if not comment_to_like:
+            self.error(404)
+            return self.render('404.html')
+        # If user is owner of the comment, redirect with an error
+        if self.user.owner_of(comment_to_like):
+            self.redirect("/")
+        # If user is liked this post before, redirect with an error
+        elif self.user.liked_comment_before(comment_to_like):
+            self.redirect(comment_to_like.post.link_to('show'))
+        else:
+            new_like = CommentLike(comment=comment_to_like, user=self.user)
+            new_like.put()
+        self.redirect(comment_to_like.post.link_to('show'))
+
+
+class DislikeCommentHandler(ApplicationHandler):
+    def post(self, comment_id):
+        # If any user does not logged in redirect to homepage
+        if not self.user:
+            self.redirect("/login")
+
+        comment_to_dislike = Comment.find_by_id(comment_id)
+        # If comment couldn't find redirect 404 page
+        if not comment_to_dislike:
+            self.error(404)
+            return self.render('404.html')
+
+        if not self.user.liked_comment_before(comment_to_dislike):
+            self.redirect(comment_to_dislike.post.link_to('show'))
+        else:
+            for like in comment_to_dislike.commentlike_set:
+                if like.user.key() == self.user.key():
+                    like.delete()
+                    break
+        self.redirect(comment_to_dislike.post.link_to('show'))
+
 app = webapp2.WSGIApplication([
     ('/', HomeHandler),
     ('/signup', SignUpHandler),
@@ -375,5 +434,7 @@ app = webapp2.WSGIApplication([
     ('/posts/([^/]+)/like', LikePostHandler),
     ('/posts/([^/]+)/dislike', DislikePostHandler),
     ('/comments/([0-9]+)/edit', EditCommentHandler),
-    ('/comments/([0-9]+)/delete', DeleteCommentHandler)
+    ('/comments/([0-9]+)/delete', DeleteCommentHandler),
+    ('/comments/([0-9]+)/like', LikeCommentHandler),
+    ('/comments/([0-9]+)/dislike', DislikeCommentHandler)
 ], debug=True)
