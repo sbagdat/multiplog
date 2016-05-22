@@ -21,6 +21,6 @@ is here: [Live Demo](http://multiuserblogapp.appspot.com/)
 
 # Usage
 
-* Download (or clone) the [repository](https://github.com/sbagdat/multiuserblogapp)
+* Download (or clone) the [repository](https://github.com/sbagdat/multiplog)
 * Create and configure your [App Engine](https://cloud.google.com/appengine/) account
 * Deploy the application.
